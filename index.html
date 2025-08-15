@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Pagos - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Control de Pagos
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Ingresa a tu cuenta
+            </p>
+        </div>
+        <div class="bg-white py-8 px-6 shadow rounded-lg">
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Correo electrónico
+                    </label>
+                    <input id="email" name="email" type="email" required
+                        class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="tu@email.com">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">
+                        Contraseña
+                    </label>
+                    <input id="password" name="password" type="password" required
+                        class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Tu contraseña">
+                </div>
+                
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded"></div>
+                
+                <div>
+                    <button type="submit" id="loginBtn"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Iniciar Sesión
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿No tienes cuenta? 
+                        <a href="#" id="showRegister" class="font-medium text-blue-600 hover:text-blue-500">
+                            Regístrate aquí
+                        </a>
+                    </p>
+                </div>
+            </form>
+            
+            <!-- Formulario de registro (oculto inicialmente) -->
+            <form id="registerForm" class="space-y-6 hidden">
+                <div>
+                    <label for="regEmail" class="block text-sm font-medium text-gray-700">
+                        Correo electrónico
+                    </label>
+                    <input id="regEmail" name="email" type="email" required
+                        class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="regPassword" class="block text-sm font-medium text-gray-700">
+                        Contraseña
+                    </label>
+                    <input id="regPassword" name="password" type="password" required
+                        class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div id="registerMessage" class="hidden bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded"></div>
+                
+                <div>
+                    <button type="submit"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Crear Cuenta
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <a href="#" id="showLogin" class="font-medium text-blue-600 hover:text-blue-500">
+                        Volver al login
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const showRegister = document.getElementById('showRegister');
+            const showLogin = document.getElementById('showLogin');
+            const errorMessage = document.getElementById('errorMessage');
+            const registerMessage = document.getElementById('registerMessage');
+
+            // Alternar entre login y registro
+            showRegister.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            });
+
+            showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+            });
+
+            // Manejar login
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    errorMessage.classList.add('hidden');
+                    await auth.login(email, password);
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                }
+            });
+
+            // Manejar registro
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+
+                try {
+                    await auth.register(email, password);
+                    registerMessage.textContent = 'Cuenta creada exitosamente. Revisa tu email para confirmar.';
+                    registerMessage.classList.remove('hidden');
+                } catch (error) {
+                    registerMessage.textContent = error.message;
+                    registerMessage.classList.remove('hidden');
+                    registerMessage.classList.remove('bg-green-50', 'border-green-200', 'text-green-600');
+                    registerMessage.classList.add('bg-red-50', 'border-red-200', 'text-red-600');
+                }
+            });
+
+            // Redirigir si ya está autenticado
+            if (auth.isAuthenticated()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
