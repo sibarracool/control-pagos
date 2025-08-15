@@ -451,9 +451,65 @@
             }, 500);
         });
         
-        // Hacer funciones globales para debugging
-        window.showClientModalBackup = showClientModalBackup;
-        window.hideClientModalBackup = hideClientModalBackup;
+        // Función de prueba para insertar cliente directamente
+        async function testClientInsert() {
+            console.log('=== PRUEBA DIRECTA DE INSERCIÓN ===');
+            
+            try {
+                // Verificar que tenemos supabase y usuario
+                console.log('Supabase disponible:', !!window.supabase);
+                console.log('Auth disponible:', !!window.auth);
+                console.log('Usuario:', window.auth?.user);
+                
+                if (!window.auth?.user?.id) {
+                    throw new Error('No hay usuario autenticado');
+                }
+                
+                const testData = {
+                    name: 'Cliente Prueba ' + Date.now(),
+                    email: 'prueba@test.com',
+                    phone: '12345678',
+                    principal_amount: 1000,
+                    monthly_percentage: 5,
+                    payment_day: 15,
+                    user_id: window.auth.user.id
+                };
+                
+                console.log('Datos de prueba:', testData);
+                
+                const { data, error } = await supabase
+                    .from('clients')
+                    .insert([testData])
+                    .select()
+                    .single();
+                
+                console.log('Resultado inserción:');
+                console.log('Data:', data);
+                console.log('Error:', error);
+                
+                if (error) {
+                    console.error('Error específico:', error);
+                    alert('Error: ' + error.message);
+                } else {
+                    console.log('✅ Cliente insertado exitosamente');
+                    alert('✅ Cliente de prueba insertado exitosamente');
+                    
+                    // Recargar la página para ver el cliente
+                    if (window.clientManager) {
+                        window.clientManager.loadClients().then(() => {
+                            window.clientManager.renderClientsTable();
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error en prueba:', error);
+                alert('Error en prueba: ' + error.message);
+            }
+        }
+        
+        // Hacer función global
+        window.testClientInsert = testClientInsert;
     </script>
 </body>
 </html>
