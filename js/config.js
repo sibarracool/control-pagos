@@ -1,29 +1,14 @@
 // js/config.js
 const supabaseConfig = {
-    url: 'TU_SUPABASE_URL',  // Reemplazar con tu URL real de Supabase
-    anonKey: 'TU_SUPABASE_ANON_KEY'  // Reemplazar con tu API Key real
+    url: 'https://irgghbimbmkwncukvnyq.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyZ2doYmltYm1rd25jdWt2bnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyMjk1NjAsImV4cCI6MjA3MDgwNTU2MH0.SnaUHt3lfEw5fxx2FuMGQLQoc_NQG0dpbZ6pMtI_SlU'
 };
 
 // Inicializar Supabase
-let supabase;
-try {
-    if (typeof window.supabase !== 'undefined') {
-        supabase = window.supabase.createClient(
-            supabaseConfig.url, 
-            supabaseConfig.anonKey
-        );
-        console.log('✅ Supabase inicializado');
-        
-        // Si las credenciales no están configuradas, mostrar advertencia
-        if (supabaseConfig.url === 'TU_SUPABASE_URL' || supabaseConfig.anonKey === 'TU_SUPABASE_ANON_KEY') {
-            console.warn('⚠️ Credenciales no configuradas en config.js, pero continuando...');
-        }
-    } else {
-        console.error('❌ window.supabase no disponible');
-    }
-} catch (error) {
-    console.error('Error inicializando Supabase:', error);
-}
+const supabase = window.supabase.createClient(
+    supabaseConfig.url, 
+    supabaseConfig.anonKey
+);
 
 // Configuración de la aplicación
 const appConfig = {
@@ -33,7 +18,3 @@ const appConfig = {
     defaultPercentage: 5.00,
     itemsPerPage: 10
 };
-
-// Hacer configuración disponible globalmente para debugging
-window.appConfig = appConfig;
-window.supabaseConfig = supabaseConfig;
