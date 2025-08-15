@@ -23,6 +23,9 @@ class ClientManager {
 
         console.log('Usuario autenticado, continuando...'); // Debug
 
+        // DIAGNÓSTICO DE CONFIGURACIÓN
+        await this.diagnoseConfiguration();
+
         try {
             await this.loadClients();
             console.log('Clientes cargados:', this.clients.length); // Debug
@@ -41,6 +44,51 @@ class ClientManager {
             console.error('Error en init():', error);
             Utils.showError('Error inicializando la gestión de clientes');
         }
+    }
+
+    async diagnoseConfiguration() {
+        console.log('=== DIAGNÓSTICO DE CONFIGURACIÓN ===');
+        
+        // Verificar Supabase
+        console.log('Supabase disponible:', typeof supabase !== 'undefined');
+        if (typeof supabase !== 'undefined') {
+            console.log('Supabase URL:', supabase.supabaseUrl);
+            console.log('Supabase Key configurada:', !!supabase.supabaseKey);
+        }
+        
+        // Verificar Auth
+        console.log('Auth disponible:', typeof auth !== 'undefined');
+        if (typeof auth !== 'undefined' && auth.user) {
+            console.log('Usuario ID:', auth.user.id);
+            console.log('Usuario email:', auth.user.email);
+        }
+        
+        // Probar conexión básica a Supabase
+        if (typeof supabase !== 'undefined') {
+            try {
+                console.log('Probando conexión a Supabase...');
+                const { data, error } = await supabase
+                    .from('clients')
+                    .select('count')
+                    .limit(1);
+                    
+                if (error) {
+                    console.error('Error conectando a Supabase:', error);
+                    if (error.message.includes('relation "clients" does not exist')) {
+                        Utils.showError('La tabla "clients" no existe. Necesitas configurar la base de datos primero.');
+                    } else {
+                        Utils.showError('Error de configuración: ' + error.message);
+                    }
+                } else {
+                    console.log('✅ Conexión a Supabase exitosa');
+                }
+            } catch (error) {
+                console.error('Error probando Supabase:', error);
+                Utils.showError('Error de configuración de Supabase: ' + error.message);
+            }
+        }
+        
+        console.log('=== FIN DIAGNÓSTICO ===');
     }
 
     async loadClients() {
@@ -64,18 +112,43 @@ class ClientManager {
     }
 
     async createClient(clientData) {
+        console.log('=== CREAR CLIENTE ==='); // Debug
+        console.log('Datos a insertar:', clientData); // Debug
+        
         try {
+            console.log('Preparando datos para Supabase...'); // Debug
+            
+            const dataToInsert = {
+                ...clientData,
+                user_id: auth.user.id,
+                monthly_percentage: clientData.monthly_percentage || 5.0
+            };
+            
+            console.log('Datos finales para insertar:', dataToInsert); // Debug
+            console.log('User ID:', auth.user.id); // Debug
+            
+            console.log('Ejecutando INSERT en Supabase...'); // Debug
+            
             const { data, error } = await supabase
                 .from('clients')
-                .insert([{
-                    ...clientData,
-                    user_id: auth.user.id,
-                    monthly_percentage: clientData.monthly_percentage || 5.0
-                }])
+                .insert([dataToInsert])
                 .select()
                 .single();
 
-            if (error) throw error;
+            console.log('Respuesta de Supabase:'); // Debug
+            console.log('Data:', data); // Debug
+            console.log('Error:', error); // Debug
+
+            if (error) {
+                console.error('Error de Supabase:', error); // Debug
+                throw error;
+            }
+            
+            if (!data) {
+                throw new Error('No se recibieron datos después de la inserción');
+            }
+            
+            console.log('Cliente creado exitosamente:', data); // Debug
             
             await this.loadClients();
             this.renderClientsTable();
@@ -83,8 +156,29 @@ class ClientManager {
             return data;
             
         } catch (error) {
-            console.error('Error creando cliente:', error);
-            throw new Error('Error al crear el cliente: ' + error.message);
+            console.error('ERROR en createClient:', error); // Debug
+            console.error('Error completo:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            }); // Debug
+            
+            let errorMessage = 'Error al crear el cliente';
+            
+            if (error.code === 'PGRST116') {
+                errorMessage = 'Error: La tabla "clients" no existe. Verifica la configuración de la base de datos.';
+            } else if (error.message && error.message.includes('relation "clients" does not exist')) {
+                errorMessage = 'Error: La tabla "clients" no existe en la base de datos. Necesitas ejecutar el script SQL de configuración.';
+            } else if (error.message && error.message.includes('JWT')) {
+                errorMessage = 'Error de autenticación. Por favor, vuelve a iniciar sesión.';
+            } else if (error.message && error.message.includes('Invalid API key')) {
+                errorMessage = 'Error de configuración: Verifica las credenciales de Supabase en config.js';
+            } else if (error.message) {
+                errorMessage = `Error: ${error.message}`;
+            }
+            
+            throw new Error(errorMessage);
         }
     }
 
