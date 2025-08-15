@@ -125,6 +125,8 @@ body {
     border-radius: 0.375rem;
     font-size: 0.875rem;
     transition: all 0.15s ease-in-out;
+    color: #1F2937; /* Texto más oscuro */
+    background-color: #FFFFFF; /* Fondo blanco explícito */
 }
 
 .form-input:focus {
@@ -132,6 +134,7 @@ body {
     outline-offset: 2px;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    color: #111827; /* Texto aún más oscuro al enfocar */
 }
 
 .form-input.error {
@@ -142,6 +145,75 @@ body {
 .form-input.success {
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Inputs específicos - MEJORA DE CONTRASTE */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+select,
+textarea {
+    color: #1F2937 !important; /* Gris muy oscuro */
+    background-color: #FFFFFF !important; /* Fondo blanco */
+    font-weight: 400;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    color: #111827 !important; /* Negro casi puro al enfocar */
+    background-color: #FFFFFF !important;
+}
+
+/* Placeholder con mejor contraste */
+input::placeholder,
+textarea::placeholder {
+    color: #6B7280 !important; /* Gris medio para placeholder */
+    opacity: 1;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+    color: #9CA3AF !important; /* Gris más claro al enfocar */
+}
+
+/* Select específico */
+select option {
+    color: #1F2937 !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Asegurar contraste en todos los estados */
+.form-input:not(:focus):not(:hover) {
+    color: #374151 !important; /* Gris oscuro por defecto */
+}
+
+.form-input:hover {
+    color: #1F2937 !important; /* Más oscuro al hacer hover */
+    border-color: #D1D5DB;
+}
+
+/* Campos de Tailwind específicos en modales */
+.modal input,
+.modal select,
+.modal textarea {
+    color: #1F2937 !important;
+    background-color: #FFFFFF !important;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+    color: #111827 !important;
+    background-color: #FFFFFF !important;
 }
 
 /* Tablas mejoradas */

@@ -7,6 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Estilos adicionales para mejor contraste de texto -->
+    <style>
+        /* Asegurar texto oscuro en todos los inputs */
+        input, select, textarea {
+            color: #1F2937 !important;
+            background-color: #FFFFFF !important;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            color: #111827 !important;
+            background-color: #FFFFFF !important;
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #6B7280 !important;
+            opacity: 1;
+        }
+        
+        /* Específico para el modal */
+        #client-modal input,
+        #client-modal select,
+        #client-modal textarea {
+            color: #1F2937 !important;
+            background-color: #FFFFFF !important;
+            font-weight: 400;
+        }
+        
+        #client-modal input:focus,
+        #client-modal select:focus,
+        #client-modal textarea:focus {
+            color: #111827 !important;
+            background-color: #FFFFFF !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -210,6 +245,7 @@
                     </label>
                     <input type="text" id="name" name="name" required
                            data-label="Nombre"
+                           style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="Nombre completo del cliente">
                 </div>
@@ -220,6 +256,7 @@
                     </label>
                     <input type="email" id="email" name="email"
                            data-validate="email" data-label="Email"
+                           style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="cliente@email.com">
                 </div>
@@ -230,6 +267,7 @@
                     </label>
                     <input type="tel" id="phone" name="phone"
                            data-validate="phone" data-label="Teléfono"
+                           style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="XXXXXXXX o +502XXXXXXXX">
                 </div>
@@ -241,6 +279,7 @@
                     <input type="number" id="principal_amount" name="principal_amount" required
                            data-validate="number" data-label="Monto principal"
                            step="0.01" min="1"
+                           style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="Ej: 10000.00">
                 </div>
@@ -251,6 +290,7 @@
                     </label>
                     <input type="number" id="monthly_percentage" name="monthly_percentage"
                            step="0.01" min="0.01" max="100" value="5"
+                           style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="5.00">
                     <p class="text-xs text-gray-500 mt-1">Por defecto es 5%</p>
@@ -261,6 +301,7 @@
                         Día de pago mensual *
                     </label>
                     <select id="payment_day" name="payment_day" required
+                            style="color: #1F2937 !important; background-color: #FFFFFF !important;"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Seleccionar día</option>
                         <option value="1">Día 1</option>
