@@ -83,9 +83,9 @@
                     </button>
                     
                     <!-- Botón de prueba directo (temporal) -->
-                    <button onclick="clientManager?.showClientModal()" 
-                            class="ml-2 inline-flex items-center px-3 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
-                        Prueba Modal
+                    <button onclick="showClientModalBackup()" 
+                            class="ml-2 inline-flex items-center px-3 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100">
+                        Backup Modal
                     </button>
                 </div>
             </div>
@@ -329,5 +329,90 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/clients.js"></script>
+    
+    <!-- Script de backup para el modal -->
+    <script>
+        // Función de backup para mostrar modal si la clase falla
+        function showClientModalBackup() {
+            console.log('Función de backup llamada');
+            const modal = document.getElementById('client-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                console.log('Modal mostrado con función de backup');
+                
+                // Enfocar primer input
+                const firstInput = modal.querySelector('input[type="text"]');
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 100);
+                }
+            } else {
+                console.error('Modal no encontrado en función de backup');
+                alert('Error: No se puede abrir el formulario de cliente');
+            }
+        }
+        
+        // Función de backup para cerrar modal
+        function hideClientModalBackup() {
+            console.log('Cerrando modal con función de backup');
+            const modal = document.getElementById('client-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                
+                // Limpiar formulario
+                const form = document.getElementById('client-form');
+                if (form) {
+                    form.reset();
+                    const monthlyPercentage = form.querySelector('#monthly_percentage');
+                    const paymentDay = form.querySelector('#payment_day');
+                    if (monthlyPercentage) monthlyPercentage.value = '5';
+                    if (paymentDay) paymentDay.value = '1';
+                }
+            }
+        }
+        
+        // Event listener de backup directo al DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded - configurando backup listeners');
+            
+            // Backup para botón agregar
+            setTimeout(() => {
+                const addBtn = document.getElementById('add-client-btn');
+                if (addBtn && !addBtn.dataset.listenerAdded) {
+                    addBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Backup listener - botón agregar presionado');
+                        
+                        if (window.clientManager && window.clientManager.showClientModal) {
+                            window.clientManager.showClientModal();
+                        } else {
+                            console.log('ClientManager no disponible, usando backup');
+                            showClientModalBackup();
+                        }
+                    });
+                    addBtn.dataset.listenerAdded = 'true';
+                    console.log('Backup listener agregado al botón');
+                }
+                
+                // Backup para botones de cerrar
+                const closeButtons = document.querySelectorAll('[data-modal-close]');
+                closeButtons.forEach(btn => {
+                    if (!btn.dataset.listenerAdded) {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('Backup listener - cerrar modal');
+                            hideClientModalBackup();
+                        });
+                        btn.dataset.listenerAdded = 'true';
+                    }
+                });
+                
+                console.log('Backup listeners configurados');
+            }, 500);
+        });
+        
+        // Hacer funciones globales para debugging
+        window.showClientModalBackup = showClientModalBackup;
+        window.hideClientModalBackup = hideClientModalBackup;
+    </script>
 </body>
 </html>
