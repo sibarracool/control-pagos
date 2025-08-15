@@ -12,83 +12,35 @@ class ClientManager {
     }
 
     async init() {
-        console.log('ClientManager init() llamado'); // Debug
+        console.log('ClientManager init() llamado');
         
         // Verificar autenticación
         if (!auth.isAuthenticated()) {
-            console.log('No autenticado, redirigiendo...'); // Debug
+            console.log('No autenticado, redirigiendo...');
             window.location.href = 'index.html';
             return;
         }
 
-        console.log('Usuario autenticado, continuando...'); // Debug
-
-        // DIAGNÓSTICO DE CONFIGURACIÓN
-        await this.diagnoseConfiguration();
+        console.log('Usuario autenticado, continuando...');
 
         try {
             await this.loadClients();
-            console.log('Clientes cargados:', this.clients.length); // Debug
+            console.log('Clientes cargados:', this.clients.length);
             
             this.renderClientsTable();
-            console.log('Tabla renderizada'); // Debug
+            console.log('Tabla renderizada');
             
             this.setupEventListeners();
-            console.log('Event listeners configurados'); // Debug
+            console.log('Event listeners configurados');
             
             this.setupModal();
-            console.log('Modal configurado'); // Debug
+            console.log('Modal configurado');
             
-            console.log('ClientManager inicializado correctamente'); // Debug
+            console.log('ClientManager inicializado correctamente');
         } catch (error) {
             console.error('Error en init():', error);
             Utils.showError('Error inicializando la gestión de clientes');
         }
-    }
-
-    async diagnoseConfiguration() {
-        console.log('=== DIAGNÓSTICO DE CONFIGURACIÓN ===');
-        
-        // Verificar Supabase
-        console.log('Supabase disponible:', typeof supabase !== 'undefined');
-        if (typeof supabase !== 'undefined') {
-            console.log('Supabase URL:', supabase.supabaseUrl);
-            console.log('Supabase Key configurada:', !!supabase.supabaseKey);
-        }
-        
-        // Verificar Auth
-        console.log('Auth disponible:', typeof auth !== 'undefined');
-        if (typeof auth !== 'undefined' && auth.user) {
-            console.log('Usuario ID:', auth.user.id);
-            console.log('Usuario email:', auth.user.email);
-        }
-        
-        // Probar conexión básica a Supabase
-        if (typeof supabase !== 'undefined') {
-            try {
-                console.log('Probando conexión a Supabase...');
-                const { data, error } = await supabase
-                    .from('clients')
-                    .select('count')
-                    .limit(1);
-                    
-                if (error) {
-                    console.error('Error conectando a Supabase:', error);
-                    if (error.message.includes('relation "clients" does not exist')) {
-                        Utils.showError('La tabla "clients" no existe. Necesitas configurar la base de datos primero.');
-                    } else {
-                        Utils.showError('Error de configuración: ' + error.message);
-                    }
-                } else {
-                    console.log('✅ Conexión a Supabase exitosa');
-                }
-            } catch (error) {
-                console.error('Error probando Supabase:', error);
-                Utils.showError('Error de configuración de Supabase: ' + error.message);
-            }
-        }
-        
-        console.log('=== FIN DIAGNÓSTICO ===');
     }
 
     async loadClients() {
@@ -112,22 +64,17 @@ class ClientManager {
     }
 
     async createClient(clientData) {
-        console.log('=== CREAR CLIENTE ==='); // Debug
-        console.log('Datos a insertar:', clientData); // Debug
+        console.log('=== CREAR CLIENTE ===');
+        console.log('Datos a insertar:', clientData);
         
         try {
-            console.log('Preparando datos para Supabase...'); // Debug
-            
             const dataToInsert = {
                 ...clientData,
                 user_id: auth.user.id,
                 monthly_percentage: clientData.monthly_percentage || 5.0
             };
             
-            console.log('Datos finales para insertar:', dataToInsert); // Debug
-            console.log('User ID:', auth.user.id); // Debug
-            
-            console.log('Ejecutando INSERT en Supabase...'); // Debug
+            console.log('Datos finales para insertar:', dataToInsert);
             
             const { data, error } = await supabase
                 .from('clients')
@@ -135,12 +82,10 @@ class ClientManager {
                 .select()
                 .single();
 
-            console.log('Respuesta de Supabase:'); // Debug
-            console.log('Data:', data); // Debug
-            console.log('Error:', error); // Debug
+            console.log('Respuesta de Supabase:', { data, error });
 
             if (error) {
-                console.error('Error de Supabase:', error); // Debug
+                console.error('Error de Supabase:', error);
                 throw error;
             }
             
@@ -148,7 +93,7 @@ class ClientManager {
                 throw new Error('No se recibieron datos después de la inserción');
             }
             
-            console.log('Cliente creado exitosamente:', data); // Debug
+            console.log('Cliente creado exitosamente:', data);
             
             await this.loadClients();
             this.renderClientsTable();
@@ -156,26 +101,17 @@ class ClientManager {
             return data;
             
         } catch (error) {
-            console.error('ERROR en createClient:', error); // Debug
-            console.error('Error completo:', {
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-                code: error.code
-            }); // Debug
-            
+            console.error('ERROR en createClient:', error);
             let errorMessage = 'Error al crear el cliente';
             
-            if (error.code === 'PGRST116') {
-                errorMessage = 'Error: La tabla "clients" no existe. Verifica la configuración de la base de datos.';
-            } else if (error.message && error.message.includes('relation "clients" does not exist')) {
-                errorMessage = 'Error: La tabla "clients" no existe en la base de datos. Necesitas ejecutar el script SQL de configuración.';
-            } else if (error.message && error.message.includes('JWT')) {
-                errorMessage = 'Error de autenticación. Por favor, vuelve a iniciar sesión.';
-            } else if (error.message && error.message.includes('Invalid API key')) {
-                errorMessage = 'Error de configuración: Verifica las credenciales de Supabase en config.js';
-            } else if (error.message) {
-                errorMessage = `Error: ${error.message}`;
+            if (error.message) {
+                if (error.message.includes('relation "clients" does not exist')) {
+                    errorMessage = 'Error: La tabla "clients" no existe en la base de datos.';
+                } else if (error.message.includes('JWT')) {
+                    errorMessage = 'Error de autenticación. Por favor, vuelve a iniciar sesión.';
+                } else {
+                    errorMessage = `Error: ${error.message}`;
+                }
             }
             
             throw new Error(errorMessage);
@@ -207,7 +143,6 @@ class ClientManager {
 
     async deleteClient(id) {
         try {
-            // Primero verificar si tiene pagos
             const { data: payments } = await supabase
                 .from('payments')
                 .select('id')
@@ -221,7 +156,6 @@ class ClientManager {
                 
                 if (!confirmDelete) return false;
 
-                // Eliminar pagos primero
                 await supabase
                     .from('payments')
                     .delete()
@@ -229,7 +163,6 @@ class ClientManager {
                     .eq('user_id', auth.user.id);
             }
 
-            // Eliminar cliente (soft delete)
             const { error } = await supabase
                 .from('clients')
                 .update({ is_active: false })
@@ -262,7 +195,6 @@ class ClientManager {
     getFilteredClients() {
         let filtered = [...this.clients];
         
-        // Aplicar búsqueda
         if (this.searchTerm) {
             const term = this.searchTerm.toLowerCase();
             filtered = filtered.filter(client => 
@@ -311,10 +243,10 @@ class ClientManager {
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900">
-                        ${this.formatCurrency(client.principal_amount)}
+                        Q${client.principal_amount.toLocaleString()}
                     </td>
                     <td class="px-6 py-4 text-sm font-medium text-green-600">
-                        ${this.formatCurrency(monthlyAmount)}
+                        Q${monthlyAmount.toLocaleString()}
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900">
                         Día ${client.payment_day}
@@ -339,16 +271,6 @@ class ClientManager {
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                            <button onclick="clientManager.viewClientDetails('${client.id}')" 
-                                    class="text-gray-600 hover:text-gray-800 p-1 rounded hover:bg-gray-50"
-                                    title="Ver detalles">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
                             </button>
                         </div>
@@ -384,19 +306,6 @@ class ClientManager {
                             class="px-3 py-1 text-sm border rounded ${this.currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}">
                         Anterior
                     </button>
-                    
-                    ${Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                        const page = i + Math.max(1, this.currentPage - 2);
-                        if (page > totalPages) return '';
-                        
-                        return `
-                            <button onclick="clientManager.goToPage(${page})" 
-                                    class="px-3 py-1 text-sm border rounded ${page === this.currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}">
-                                ${page}
-                            </button>
-                        `;
-                    }).join('')}
-                    
                     <button onclick="clientManager.goToPage(${this.currentPage + 1})" 
                             ${this.currentPage === totalPages ? 'disabled' : ''}
                             class="px-3 py-1 text-sm border rounded ${this.currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}">
@@ -420,4 +329,322 @@ class ClientManager {
             statsContainer.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-lg p-4">
-                        
+                        <div class="text-2xl font-bold text-blue-900">${totalClients}</div>
+                        <div class="text-blue-700">Total Clientes</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-green-900">Q${totalAmount.toLocaleString()}</div>
+                        <div class="text-green-700">Capital Total</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-purple-900">Q${monthlyExpected.toLocaleString()}</div>
+                        <div class="text-purple-700">Ingresos Esperados/Mes</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    setupEventListeners() {
+        console.log('Configurando event listeners...');
+        
+        const searchInput = document.getElementById('client-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchTerm = e.target.value;
+                this.currentPage = 1;
+                this.renderClientsTable();
+            });
+        }
+
+        const addButton = document.getElementById('add-client-btn');
+        if (addButton) {
+            addButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('¡Botón agregar cliente presionado!');
+                this.showClientModal();
+            });
+            console.log('Event listener agregado al botón agregar');
+        }
+
+        const itemsSelect = document.getElementById('items-per-page');
+        if (itemsSelect) {
+            itemsSelect.addEventListener('change', (e) => {
+                this.itemsPerPage = parseInt(e.target.value);
+                this.currentPage = 1;
+                this.renderClientsTable();
+            });
+        }
+    }
+
+    setupModal() {
+        console.log('Configurando modal...');
+        
+        const form = document.getElementById('client-form');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('Formulario enviado');
+                await this.handleFormSubmit(e);
+            });
+        }
+
+        const closeButtons = document.querySelectorAll('[data-modal-close]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.hideClientModal();
+            });
+        });
+
+        const modal = document.getElementById('client-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideClientModal();
+                }
+            });
+        }
+
+        this.setupFormValidation();
+    }
+
+    setupFormValidation() {
+        const amountInput = document.getElementById('principal_amount');
+        const percentageInput = document.getElementById('monthly_percentage');
+        const previewElement = document.getElementById('monthly-preview');
+
+        const updatePreview = () => {
+            const amount = parseFloat(amountInput?.value || 0);
+            const percentage = parseFloat(percentageInput?.value || 5);
+            const monthly = amount * percentage / 100;
+
+            if (previewElement && amount > 0) {
+                previewElement.innerHTML = `
+                    <div class="bg-blue-50 p-3 rounded-md">
+                        <p class="text-sm text-blue-700">
+                            Pago mensual esperado: <span class="font-semibold">Q${monthly.toLocaleString()}</span>
+                        </p>
+                        <p class="text-xs text-blue-600 mt-1">
+                            Fecha de pago: Día ${document.getElementById('payment_day')?.value || 1} de cada mes
+                        </p>
+                    </div>
+                `;
+            } else if (previewElement) {
+                previewElement.innerHTML = '';
+            }
+        };
+
+        if (amountInput) amountInput.addEventListener('input', updatePreview);
+        if (percentageInput) percentageInput.addEventListener('input', updatePreview);
+    }
+
+    async handleFormSubmit(e) {
+        console.log('=== INICIO ENVÍO FORMULARIO ===');
+        
+        const formData = new FormData(e.target);
+        const clientData = {
+            name: formData.get('name').trim(),
+            email: formData.get('email')?.trim() || null,
+            phone: formData.get('phone')?.trim() || null,
+            principal_amount: parseFloat(formData.get('principal_amount')),
+            monthly_percentage: parseFloat(formData.get('monthly_percentage') || 5),
+            payment_day: parseInt(formData.get('payment_day'))
+        };
+
+        console.log('Datos del formulario:', clientData);
+
+        // Validaciones
+        if (!clientData.name) {
+            this.showError('El nombre es requerido');
+            return;
+        }
+
+        if (!clientData.principal_amount || clientData.principal_amount <= 0) {
+            this.showError('El monto principal debe ser mayor a 0');
+            return;
+        }
+
+        if (clientData.payment_day < 1 || clientData.payment_day > 31) {
+            this.showError('El día de pago debe estar entre 1 y 31');
+            return;
+        }
+
+        try {
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Guardando...';
+
+            if (this.editingClient) {
+                await this.updateClient(this.editingClient.id, clientData);
+            } else {
+                await this.createClient(clientData);
+            }
+
+            this.hideClientModal();
+            
+        } catch (error) {
+            console.error('ERROR en handleFormSubmit:', error);
+            this.showError(error.message);
+        } finally {
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = this.editingClient ? 'Actualizar Cliente' : 'Agregar Cliente';
+            }
+        }
+    }
+
+    showClientModal(client = null) {
+        console.log('showClientModal llamado', client);
+        
+        this.editingClient = client;
+        const modal = document.getElementById('client-modal');
+        const form = document.getElementById('client-form');
+        const title = document.getElementById('modal-title');
+
+        if (!modal || !form || !title) {
+            console.error('Elementos del modal no encontrados');
+            return;
+        }
+
+        title.textContent = client ? 'Editar Cliente' : 'Agregar Nuevo Cliente';
+
+        if (client) {
+            form.elements.name.value = client.name;
+            form.elements.email.value = client.email || '';
+            form.elements.phone.value = client.phone || '';
+            form.elements.principal_amount.value = client.principal_amount;
+            form.elements.monthly_percentage.value = client.monthly_percentage;
+            form.elements.payment_day.value = client.payment_day;
+        } else {
+            form.reset();
+            form.elements.monthly_percentage.value = 5;
+            form.elements.payment_day.value = 1;
+        }
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            if (form.elements.name) form.elements.name.focus();
+        }, 100);
+    }
+
+    hideClientModal() {
+        const modal = document.getElementById('client-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        this.editingClient = null;
+    }
+
+    editClient(id) {
+        const client = this.clients.find(c => c.id === id);
+        if (client) {
+            this.showClientModal(client);
+        }
+    }
+
+    deleteClientConfirm(id) {
+        const client = this.clients.find(c => c.id === id);
+        if (client) {
+            const confirmed = confirm(`¿Estás seguro de eliminar al cliente "${client.name}"?`);
+            if (confirmed) {
+                this.deleteClient(id);
+            }
+        }
+    }
+
+    goToPage(page) {
+        const totalPages = Math.ceil(this.getFilteredClients().length / this.itemsPerPage);
+        if (page >= 1 && page <= totalPages) {
+            this.currentPage = page;
+            this.renderClientsTable();
+        }
+    }
+
+    getNextPaymentDate(client) {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        let nextPaymentDate = new Date(currentYear, currentMonth, client.payment_day);
+        
+        if (nextPaymentDate <= today) {
+            nextPaymentDate = new Date(currentYear, currentMonth + 1, client.payment_day);
+        }
+        
+        return nextPaymentDate.toISOString().split('T')[0];
+    }
+
+    formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('es-GT', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    showSuccess(message) {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        successDiv.textContent = message;
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+            successDiv.remove();
+        }, 3000);
+    }
+}
+
+// Inicializar gestor de clientes
+let clientManager;
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded - Clients page');
+    
+    if (typeof auth === 'undefined') {
+        console.error('Auth no está definido');
+        return;
+    }
+    
+    if (typeof supabase === 'undefined') {
+        console.error('Supabase no está definido');
+        return;
+    }
+    
+    console.log('Scripts cargados correctamente');
+    
+    setTimeout(() => {
+        console.log('Verificando autenticación...');
+        
+        if (auth.isAuthenticated()) {
+            console.log('Usuario autenticado, iniciando ClientManager');
+            clientManager = new ClientManager();
+        } else {
+            console.log('Usuario no autenticado, redirigiendo...');
+            window.location.href = 'index.html';
+        }
+    }, 100);
+});
