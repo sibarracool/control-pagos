@@ -14,8 +14,14 @@ class ClientManager {
     async init() {
         console.log('ClientManager init() llamado');
         
-        // Verificar autenticación
-        if (!auth.isAuthenticated()) {
+        // Esperar a que auth esté listo
+        await auth.waitForAuth();
+        
+        // Verificar autenticación de forma más robusta
+        const isAuth = await auth.checkAuth();
+        console.log('Verificación de auth:', isAuth);
+        
+        if (!isAuth) {
             console.log('No autenticado, redirigiendo...');
             window.location.href = 'index.html';
             return;
@@ -621,7 +627,7 @@ class ClientManager {
 // Inicializar gestor de clientes
 let clientManager;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM Content Loaded - Clients page');
     
     if (typeof auth === 'undefined') {
@@ -636,15 +642,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('Scripts cargados correctamente');
     
-    setTimeout(() => {
-        console.log('Verificando autenticación...');
+    try {
+        // Esperar a que auth esté completamente inicializado
+        console.log('Esperando inicialización de auth...');
+        await auth.waitForAuth();
         
-        if (auth.isAuthenticated()) {
+        // Verificar autenticación
+        const isAuthenticated = await auth.checkAuth();
+        console.log('Estado de autenticación:', isAuthenticated);
+        
+        if (isAuthenticated) {
             console.log('Usuario autenticado, iniciando ClientManager');
             clientManager = new ClientManager();
         } else {
             console.log('Usuario no autenticado, redirigiendo...');
             window.location.href = 'index.html';
         }
-    }, 100);
+    } catch (error) {
+        console.error('Error en inicialización:', error);
+        // En caso de error, redirigir a login
+        window.location.href = 'index.html';
+    }
 });
