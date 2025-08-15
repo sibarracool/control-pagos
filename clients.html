@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - Control de Pagos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Control de Pagos</h1>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="dashboard.html" class="text-gray-500 hover:text-gray-700 pb-4 px-1 text-sm font-medium">
+                        Dashboard
+                    </a>
+                    <a href="clients.html" class="text-blue-600 border-b-2 border-blue-600 pb-4 px-1 text-sm font-medium">
+                        Clientes
+                    </a>
+                    <a href="payments.html" class="text-gray-500 hover:text-gray-700 pb-4 px-1 text-sm font-medium">
+                        Pagos
+                    </a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <button onclick="auth.logout()" class="text-gray-400 hover:text-gray-600" title="Cerrar sesión">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <nav class="md:hidden bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8 overflow-x-auto py-2">
+                <a href="dashboard.html" class="text-gray-500 hover:text-gray-700 pb-2 px-1 text-sm font-medium whitespace-nowrap">
+                    Dashboard
+                </a>
+                <a href="clients.html" class="text-blue-600 border-b-2 border-blue-600 pb-2 px-1 text-sm font-medium whitespace-nowrap">
+                    Clientes
+                </a>
+                <a href="payments.html" class="text-gray-500 hover:text-gray-700 pb-2 px-1 text-sm font-medium whitespace-nowrap">
+                    Pagos
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Gestión de Clientes</h2>
+                    <p class="text-gray-600">Administra la información de tus clientes y sus préstamos</p>
+                </div>
+                <div class="mt-4 md:mt-0 md:ml-4">
+                    <button id="add-client-btn" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Agregar Cliente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div id="clients-stats">
+            <!-- Las estadísticas se cargan dinámicamente -->
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2">
+                    <label for="client-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar clientes
+                    </label>
+                    <input type="text" id="client-search" 
+                           placeholder="Buscar por nombre, email o teléfono..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="items-per-page" class="block text-sm font-medium text-gray-700 mb-1">
+                        Mostrar
+                    </label>
+                    <select id="items-per-page" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="10">10 por página</option>
+                        <option value="25">25 por página</option>
+                        <option value="50">50 por página</option>
+                        <option value="100">100 por página</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="clientManager.loadClients().then(() => clientManager.renderClientsTable())" 
+                            class="w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-4 w-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clients Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Lista de Clientes</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th data-sort="name" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                Cliente
+                                <svg class="h-4 w-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                </svg>
+                            </th>
+                            <th data-sort="principal_amount" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                Monto Principal
+                                <svg class="h-4 w-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                </svg>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                5% Mensual
+                            </th>
+                            <th data-sort="payment_day" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                Día de Pago
+                                <svg class="h-4 w-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                </svg>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Próximo Pago
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Los clientes se cargan dinámicamente -->
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <div class="flex items-center justify-center">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+                                    Cargando clientes...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination-container" class="px-6 py-4 border-t border-gray-200">
+                <!-- La paginación se carga dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Client Modal -->
+    <div id="client-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-semibold text-gray-900">Agregar Nuevo Cliente</h3>
+                <button data-modal-close class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="client-form" class="space-y-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre completo *
+                    </label>
+                    <input type="text" id="name" name="name" required
+                           data-label="Nombre"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Nombre completo del cliente">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                        Correo electrónico
+                    </label>
+                    <input type="email" id="email" name="email"
+                           data-validate="email" data-label="Email"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="cliente@email.com">
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono
+                    </label>
+                    <input type="tel" id="phone" name="phone"
+                           data-validate="phone" data-label="Teléfono"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="XXXXXXXX o +502XXXXXXXX">
+                </div>
+
+                <div>
+                    <label for="principal_amount" class="block text-sm font-medium text-gray-700 mb-1">
+                        Monto principal *
+                    </label>
+                    <input type="number" id="principal_amount" name="principal_amount" required
+                           data-validate="number" data-label="Monto principal"
+                           step="0.01" min="1"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Ej: 10000.00">
+                </div>
+
+                <div>
+                    <label for="monthly_percentage" class="block text-sm font-medium text-gray-700 mb-1">
+                        Porcentaje mensual
+                    </label>
+                    <input type="number" id="monthly_percentage" name="monthly_percentage"
+                           step="0.01" min="0.01" max="100" value="5"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="5.00">
+                    <p class="text-xs text-gray-500 mt-1">Por defecto es 5%</p>
+                </div>
+
+                <div>
+                    <label for="payment_day" class="block text-sm font-medium text-gray-700 mb-1">
+                        Día de pago mensual *
+                    </label>
+                    <select id="payment_day" name="payment_day" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Seleccionar día</option>
+                        <option value="1">Día 1</option>
+                        <option value="2">Día 2</option>
+                        <option value="3">Día 3</option>
+                        <option value="4">Día 4</option>
+                        <option value="5">Día 5</option>
+                        <option value="6">Día 6</option>
+                        <option value="7">Día 7</option>
+                        <option value="8">Día 8</option>
+                        <option value="9">Día 9</option>
+                        <option value="10">Día 10</option>
+                        <option value="11">Día 11</option>
+                        <option value="12">Día 12</option>
+                        <option value="13">Día 13</option>
+                        <option value="14">Día 14</option>
+                        <option value="15">Día 15</option>
+                        <option value="16">Día 16</option>
+                        <option value="17">Día 17</option>
+                        <option value="18">Día 18</option>
+                        <option value="19">Día 19</option>
+                        <option value="20">Día 20</option>
+                        <option value="21">Día 21</option>
+                        <option value="22">Día 22</option>
+                        <option value="23">Día 23</option>
+                        <option value="24">Día 24</option>
+                        <option value="25">Día 25</option>
+                        <option value="26">Día 26</option>
+                        <option value="27">Día 27</option>
+                        <option value="28">Día 28</option>
+                        <option value="29">Día 29</option>
+                        <option value="30">Día 30</option>
+                        <option value="31">Día 31</option>
+                    </select>
+                </div>
+
+                <div id="monthly-preview">
+                    <!-- Preview del pago mensual se muestra aquí -->
+                </div>
+
+                <div class="flex space-x-3 mt-6">
+                    <button type="submit" 
+                            class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Agregar Cliente
+                    </button>
+                    <button type="button" data-modal-close
+                            class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center text-sm text-gray-500">
+                © 2024 Control de Pagos. Sistema de gestión de préstamos.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/clients.js"></script>
+</body>
+</html>
