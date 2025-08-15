@@ -12,16 +12,35 @@ class ClientManager {
     }
 
     async init() {
+        console.log('ClientManager init() llamado'); // Debug
+        
         // Verificar autenticación
         if (!auth.isAuthenticated()) {
+            console.log('No autenticado, redirigiendo...'); // Debug
             window.location.href = 'index.html';
             return;
         }
 
-        await this.loadClients();
-        this.renderClientsTable();
-        this.setupEventListeners();
-        this.setupModal();
+        console.log('Usuario autenticado, continuando...'); // Debug
+
+        try {
+            await this.loadClients();
+            console.log('Clientes cargados:', this.clients.length); // Debug
+            
+            this.renderClientsTable();
+            console.log('Tabla renderizada'); // Debug
+            
+            this.setupEventListeners();
+            console.log('Event listeners configurados'); // Debug
+            
+            this.setupModal();
+            console.log('Modal configurado'); // Debug
+            
+            console.log('ClientManager inicializado correctamente'); // Debug
+        } catch (error) {
+            console.error('Error en init():', error);
+            Utils.showError('Error inicializando la gestión de clientes');
+        }
     }
 
     async loadClients() {
@@ -307,3 +326,4 @@ class ClientManager {
             statsContainer.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-lg p-4">
+                        
